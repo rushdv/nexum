@@ -17,7 +17,8 @@ const Sidebar = () => {
             <aside className="hidden lg:flex flex-col w-20 h-[calc(100vh-3rem)] sticky top-6 items-center gap-8 z-50">
                 {/* Brand Icon */}
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 mb-4 cursor-pointer hover:scale-105 transition-transform">
-                    <span className="font-bold text-white text-xl">N</span>
+                    {/* <span className="font-bold text-white text-xl">N</span> */}
+                    <img src="./src/assets/nexum.png" alt="Nexum" className="rounded-lg w-full h-full object-cover" />
                 </div>
 
                 {/* Nav Icons */}
