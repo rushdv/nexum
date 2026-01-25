@@ -1,64 +1,67 @@
-import { MoreHorizontal } from 'lucide-react';
+import { ArrowUpRight, Plus } from 'lucide-react';
 
 const RightPanel = () => {
-    const trendingTopics = [
-        { category: 'Technology', title: '#TailwindCSS', posts: '25.4K' },
-        { category: 'Design', title: '#DaisyUI', posts: '12.1K' },
-        { category: 'Programming', title: '#ReactJS', posts: '54.2K' },
-        { category: 'AI', title: '#Gemini', posts: '100K' },
-    ];
+    // This component is strictly "Contextual Info" now located on the Left.
 
-    const whoToFollow = [
-        { name: 'Elon Musk', handle: '@elonmusk', img: 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp' },
-        { name: 'Bill Gates', handle: '@BillGates', img: 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp' },
+    const trendingTopics = [
+        { title: 'UX Design', count: '12k' },
+        { title: 'React 19', count: '8.5k' },
+        { title: 'Dark Mode', count: '24k' },
     ];
 
     return (
-        <aside className="hidden xl:block w-80 h-[calc(100vh-4rem)] sticky top-16 p-4 overflow-y-auto space-y-6">
-            {/* Trending Section */}
-            <div className="card bg-base-200/50 backdrop-blur-sm border-none shadow-sm">
-                <div className="card-body p-4">
-                    <h2 className="card-title text-xl font-bold mb-2">Trends for you</h2>
-                    <div className="space-y-4">
-                        {trendingTopics.map((topic, index) => (
-                            <div key={index} className="flex justify-between items-start cursor-pointer hover:bg-base-200 p-2 rounded-lg transition-colors -mx-2">
-                                <div>
-                                    <div className="text-xs text-base-content/60">{topic.category} · Trending</div>
-                                    <div className="font-bold">{topic.title}</div>
-                                    <div className="text-xs text-base-content/60">{topic.posts} posts</div>
-                                </div>
-                                <button className="btn btn-ghost btn-xs btn-circle">
-                                    <MoreHorizontal className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ))}
+        <aside className="hidden xl:flex flex-col w-72 h-[calc(100vh-3rem)] sticky top-6 gap-8 pr-6 z-10">
+
+            {/* User Context */}
+            <div className="p-1">
+                <h2 className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-6">Your Context</h2>
+
+                {/* Mini Profile Summary */}
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-800 p-1">
+                        <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" className="w-full h-full rounded-xl object-cover" />
                     </div>
-                    <button className="btn btn-ghost btn-sm text-primary w-full mt-2">Show more</button>
+                    <div>
+                        <h3 className="text-white font-bold leading-tight">Alex Designer</h3>
+                        <p className="text-slate-500 text-sm">@alex_ux</p>
+                    </div>
+                </div>
+
+                {/* Stats */}
+                <div className="flex gap-6 mb-8">
+                    <div>
+                        <span className="block text-white font-bold text-lg">1.4k</span>
+                        <span className="text-slate-600 text-xs">Followers</span>
+                    </div>
+                    <div>
+                        <span className="block text-white font-bold text-lg">892</span>
+                        <span className="text-slate-600 text-xs">Following</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Who to follow */}
-            <div className="card bg-base-200/50 backdrop-blur-sm border-none shadow-sm">
-                <div className="card-body p-4">
-                    <h2 className="card-title text-xl font-bold mb-2">Who to follow</h2>
-                    <div className="space-y-4">
-                        {whoToFollow.map((user, index) => (
-                            <div key={index} className="flex items-center gap-3">
-                                <div className="avatar">
-                                    <div className="w-10 rounded-full">
-                                        <img src={user.img} alt={user.name} />
-                                    </div>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="font-bold truncate">{user.name}</div>
-                                    <div className="text-sm text-base-content/60 truncate">{user.handle}</div>
-                                </div>
-                                <button className="btn btn-sm btn-neutral rounded-full hover:btn-primary transition-colors">Follow</button>
+            {/* Trending Context */}
+            <div>
+                <h2 className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-4">Trending</h2>
+                <div className="space-y-1">
+                    {trendingTopics.map((item, idx) => (
+                        <div key={idx} className="group flex items-center justify-between py-3 px-3 -mx-3 rounded-xl hover:bg-slate-800/50 cursor-pointer transition-colors">
+                            <div>
+                                <h4 className="text-slate-300 text-sm font-medium group-hover:text-cyan-400 transition-colors">#{item.title}</h4>
+                                <span className="text-slate-600 text-xs">{item.count} posts</span>
                             </div>
-                        ))}
-                    </div>
+                            <ArrowUpRight className="w-4 h-4 text-slate-700 group-hover:text-cyan-500 opacity-0 group-hover:opacity-100 transition-all" />
+                        </div>
+                    ))}
                 </div>
             </div>
+
+            {/* Footer */}
+            <div className="mt-auto pb-4 text-[10px] text-slate-700 leading-relaxed font-mono">
+                Running Nexum v2.0 <br />
+                Next-Gen Social Protocol
+            </div>
+
         </aside>
     );
 };

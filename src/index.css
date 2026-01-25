@@ -1,2 +1,22 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-[#0f172a] text-slate-200 antialiased selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Custom Scrollbar for a premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-700/50 rounded-full hover:bg-slate-600;
+}
