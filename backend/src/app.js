@@ -1,29 +1,33 @@
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const errorMiddleware = require('./middlewares/error.middleware');
+import express from "express";
+import cors from "cors";
+import morgan from "morgan";
+import healthRoutes from "./routes/health.routes.js";
 
-// Routes
-const authRoutes = require('./routes/auth.routes');
-const postRoutes = require('./routes/post.routes');
+import authRoutes from "./routes/auth.routes.js";
+import errorHandler from "./middlewares/error.middleware.js";
 
 const app = express();
 
-// Middlewares
+// middlewares
 app.use(cors());
 app.use(express.json());
-app.use(morgan('dev'));
 
-// Health Check
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', message: 'Server is running' });
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+} else {
+  app.use(morgan("combined"));
+}
+
+// routes
+app.get("/", (req, res) => {
+  res.send("Nexum backend running 🚀");
 });
+app.use("/health", healthRoutes);
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes);
 
-// Error Handling Middleware (Keep this at the end)
-app.use(errorMiddleware);
+app.use("/api/auth", authRoutes);
 
-module.exports = app;
+// error handler (always last)
+app.use(errorHandler);
+
+export default app;
