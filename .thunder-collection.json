@@ -8,7 +8,7 @@
       "_id": "like-post-1",
       "colId": "likes-system",
       "containerId": "",
-      "name": "Like a Post",
+      "name": "Like/Unlike a Post (Toggle)",
       "url": "http://localhost:5000/api/likes/1",
       "method": "POST",
       "sortNum": 1,
@@ -30,34 +30,13 @@
       "tests": []
     },
     {
-      "_id": "unlike-post-1",
-      "colId": "likes-system",
-      "containerId": "",
-      "name": "Unlike a Post",
-      "url": "http://localhost:5000/api/likes/1",
-      "method": "DELETE",
-      "sortNum": 2,
-      "created": "2025-01-28T00:00:00.000Z",
-      "modified": "2025-01-28T00:00:00.000Z",
-      "headers": [
-        {
-          "key": "Authorization",
-          "value": "Bearer YOUR_JWT_TOKEN_HERE",
-          "description": "JWT Token from login"
-        }
-      ],
-      "params": [],
-      "body": {},
-      "tests": []
-    },
-    {
       "_id": "get-like-count-1",
       "colId": "likes-system",
       "containerId": "",
       "name": "Get Like Count",
       "url": "http://localhost:5000/api/likes/1/count",
       "method": "GET",
-      "sortNum": 3,
+      "sortNum": 2,
       "created": "2025-01-28T00:00:00.000Z",
       "modified": "2025-01-28T00:00:00.000Z",
       "headers": [],
@@ -72,7 +51,7 @@
       "name": "Get All Likes for Post",
       "url": "http://localhost:5000/api/likes/1",
       "method": "GET",
-      "sortNum": 4,
+      "sortNum": 3,
       "created": "2025-01-28T00:00:00.000Z",
       "modified": "2025-01-28T00:00:00.000Z",
       "headers": [],
@@ -87,7 +66,7 @@
       "name": "Check if User Liked Post",
       "url": "http://localhost:5000/api/likes/1/check",
       "method": "GET",
-      "sortNum": 5,
+      "sortNum": 4,
       "created": "2025-01-28T00:00:00.000Z",
       "modified": "2025-01-28T00:00:00.000Z",
       "headers": [
