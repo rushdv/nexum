@@ -82,3 +82,12 @@ export const getMe = async (req, res, next) => {
         next(err);
     }
 };
+
+// GOOGLE AUTH INITIAL REDIRECT
+export const googleAuth = (req, res) => {
+    res.json({
+        message: "Redirecting to Google...",
+        note: "To make this functional, we need Google OAuth Credentials (Client ID & Secret)."
+    });
+};
+
