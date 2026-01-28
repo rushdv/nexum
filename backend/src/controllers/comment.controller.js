@@ -1,4 +1,6 @@
 import CommentModel from "../models/comment.model.js";
+import NotificationModel from "../models/notification.model.js";
+import pool from "../config/db.js";
 
 // CREATE COMMENT
 export const createComment = async (req, res, next) => {
@@ -18,6 +20,21 @@ export const createComment = async (req, res, next) => {
     });
 
     res.status(201).json(comment);
+
+    const postOwner = await pool.query(
+  "SELECT user_id FROM posts WHERE id = $1",
+  [postId]
+);
+
+if (postOwner.rows[0]) {
+  await NotificationModel.create({
+    userId: postOwner.rows[0].user_id,
+    actorId: userId,
+    postId,
+    type: "comment",
+  });
+}
+
   } catch (err) {
     next(err);
   }

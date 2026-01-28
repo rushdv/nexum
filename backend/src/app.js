@@ -11,6 +11,7 @@ import commentRoutes from "./routes/comment.routes.js";
 
 import errorHandler from "./middlewares/error.middleware.js";
 import authMiddleware from "./middlewares/auth.middleware.js";
+import notificationRoutes from "./routes/notification.routes.js";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/likes", likeRoutes);
 app.use("/health", healthRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // error handler (always last)
 app.use(errorHandler);
