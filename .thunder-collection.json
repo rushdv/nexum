@@ -1,0 +1,115 @@
+{
+  "clientName": "Thunder Client",
+  "dateExported": "2025-01-28T00:00:00.000Z",
+  "version": "1.1",
+  "folders": [],
+  "requests": [
+    {
+      "_id": "like-post-1",
+      "colId": "likes-system",
+      "containerId": "",
+      "name": "Like a Post",
+      "url": "http://localhost:5000/api/likes/1",
+      "method": "POST",
+      "sortNum": 1,
+      "created": "2025-01-28T00:00:00.000Z",
+      "modified": "2025-01-28T00:00:00.000Z",
+      "headers": [
+        {
+          "key": "Authorization",
+          "value": "Bearer YOUR_JWT_TOKEN_HERE",
+          "description": "JWT Token from login"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {},
+      "tests": []
+    },
+    {
+      "_id": "unlike-post-1",
+      "colId": "likes-system",
+      "containerId": "",
+      "name": "Unlike a Post",
+      "url": "http://localhost:5000/api/likes/1",
+      "method": "DELETE",
+      "sortNum": 2,
+      "created": "2025-01-28T00:00:00.000Z",
+      "modified": "2025-01-28T00:00:00.000Z",
+      "headers": [
+        {
+          "key": "Authorization",
+          "value": "Bearer YOUR_JWT_TOKEN_HERE",
+          "description": "JWT Token from login"
+        }
+      ],
+      "params": [],
+      "body": {},
+      "tests": []
+    },
+    {
+      "_id": "get-like-count-1",
+      "colId": "likes-system",
+      "containerId": "",
+      "name": "Get Like Count",
+      "url": "http://localhost:5000/api/likes/1/count",
+      "method": "GET",
+      "sortNum": 3,
+      "created": "2025-01-28T00:00:00.000Z",
+      "modified": "2025-01-28T00:00:00.000Z",
+      "headers": [],
+      "params": [],
+      "body": {},
+      "tests": []
+    },
+    {
+      "_id": "get-post-likes-1",
+      "colId": "likes-system",
+      "containerId": "",
+      "name": "Get All Likes for Post",
+      "url": "http://localhost:5000/api/likes/1",
+      "method": "GET",
+      "sortNum": 4,
+      "created": "2025-01-28T00:00:00.000Z",
+      "modified": "2025-01-28T00:00:00.000Z",
+      "headers": [],
+      "params": [],
+      "body": {},
+      "tests": []
+    },
+    {
+      "_id": "check-user-like-1",
+      "colId": "likes-system",
+      "containerId": "",
+      "name": "Check if User Liked Post",
+      "url": "http://localhost:5000/api/likes/1/check",
+      "method": "GET",
+      "sortNum": 5,
+      "created": "2025-01-28T00:00:00.000Z",
+      "modified": "2025-01-28T00:00:00.000Z",
+      "headers": [
+        {
+          "key": "Authorization",
+          "value": "Bearer YOUR_JWT_TOKEN_HERE",
+          "description": "JWT Token from login"
+        }
+      ],
+      "params": [],
+      "body": {},
+      "tests": []
+    }
+  ],
+  "settings": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "auth": {
+      "type": "bearer",
+      "bearer": ""
+    },
+    "timeout": 30000
+  }
+}

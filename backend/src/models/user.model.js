@@ -20,3 +20,30 @@ const UserModel = {
 };
 
 export default UserModel;
+
+
+
+
+// get logged-in user's profile
+async function findMe(userId) {
+  const query = `
+    SELECT id, username, email, created_at
+    FROM users
+    WHERE id = $1
+  `;
+  const { rows } = await pool.query(query, [userId]);
+  return rows[0];
+}
+
+// get public profile by user id
+async function findPublicById(userId) {
+  const query = `
+    SELECT id, username, created_at
+    FROM users
+    WHERE id = $1
+  `;
+  const { rows } = await pool.query(query, [userId]);
+  return rows[0];
+}
+
+export { findMe, findPublicById };

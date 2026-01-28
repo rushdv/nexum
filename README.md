@@ -151,6 +151,6 @@ This project is licensed under the MIT License.
 
 ## 🧠 Author
 
-Built with care and curiosity by **NeoEIE**.
+Built with care and curiosity by **Shihab**.
 
 > **Nexum** — where connections feel intentional.
