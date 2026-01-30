@@ -24,3 +24,4 @@ export const getCommentsByPost = async (req, res, next) => {
     next(err);
   }
 };
+
