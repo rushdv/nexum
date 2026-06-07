@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import passport from "../config/passport.js";
 import UserModel from "../models/user.model.js";
 
 const SALT_ROUNDS = 10;
@@ -95,11 +96,22 @@ export const getMe = async (req, res, next) => {
     }
 };
 
-// GOOGLE AUTH INITIAL REDIRECT
-export const googleAuth = (req, res) => {
-    res.json({
-        message: "Redirecting to Google...",
-        note: "To make this functional, we need Google OAuth Credentials (Client ID & Secret)."
-    });
-};
+// GOOGLE AUTH
+export const googleAuth = passport.authenticate("google", {
+    scope: ["profile", "email"],
+    session: false,
+});
 
+export const googleCallback = (req, res, next) => {
+    passport.authenticate("google", { session: false }, (err, user) => {
+        if (err || !user) {
+            return res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/login?error=google_auth_failed`);
+        }
+        const token = jwt.sign(
+            { id: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+        res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/login?token=${token}`);
+    })(req, res, next);
+};

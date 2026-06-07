@@ -100,6 +100,79 @@ const createFollowersTable = async () => {
   }
 };
 
+const createConversationsTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS conversations (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  try {
+    await pool.query(query);
+    console.log('Conversations table ensured');
+  } catch (err) {
+    console.error('Error creating conversations table:', err);
+    process.exit(1);
+  }
+};
+
+const createConversationParticipantsTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS conversation_participants (
+      id SERIAL PRIMARY KEY,
+      conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(conversation_id, user_id)
+    );
+  `;
+  try {
+    await pool.query(query);
+    console.log('Conversation participants table ensured');
+  } catch (err) {
+    console.error('Error creating conversation participants table:', err);
+    process.exit(1);
+  }
+};
+
+const createMessagesTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY,
+      conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+      sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      content TEXT NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  try {
+    await pool.query(query);
+    console.log('Messages table ensured');
+  } catch (err) {
+    console.error('Error creating messages table:', err);
+    process.exit(1);
+  }
+};
+
+const createBookmarksTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS bookmarks (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, post_id)
+    );
+  `;
+
+  try {
+    await pool.query(query);
+    console.log('Bookmarks table ensured');
+  } catch (err) {
+    console.error('Error creating bookmarks table:', err);
+    process.exit(1);
+  }
+};
+
 const createNotificationsTable = async () => {
   const query = `
     CREATE TABLE IF NOT EXISTS notifications (
@@ -129,6 +202,10 @@ const initDb = async () => {
     await createLikesTable();
     await createCommentsTable();
     await createFollowersTable();
+    await createConversationsTable();
+    await createConversationParticipantsTable();
+    await createMessagesTable();
+    await createBookmarksTable();
     await createNotificationsTable();
     console.log('All tables initialized successfully');
     process.exit(0);

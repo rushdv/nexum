@@ -1,15 +1,22 @@
+import { useState, useEffect } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import api from '../api';
 
 const RightPanel = () => {
     const { user } = useAuth();
+    const [trending, setTrending] = useState([]);
 
-    const trendingTopics = [
-        { title: 'UX Design', count: '12k' },
-        { title: 'React 19', count: '8.5k' },
-        { title: 'Dark Mode', count: '24k' },
-    ];
+    useEffect(() => {
+        const fetch = async () => {
+            try {
+                const res = await api.get("/trending");
+                setTrending(res.data);
+            } catch (_) {}
+        };
+        fetch();
+    }, []);
 
     return (
         <aside className="hidden xl:flex flex-col w-72 h-[calc(100vh-3rem)] sticky top-6 gap-8 pr-6 z-10">
@@ -49,15 +56,17 @@ const RightPanel = () => {
             <div>
                 <h2 className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-4">Trending</h2>
                 <div className="space-y-1">
-                    {trendingTopics.map((item, idx) => (
-                        <div key={idx} className="group flex items-center justify-between py-3 px-3 -mx-3 rounded-xl hover:bg-slate-800/50 cursor-pointer transition-colors">
+                    {trending.length > 0 ? trending.map((item, idx) => (
+                        <Link key={idx} to={`/explore?q=${item.tag}`} className="group flex items-center justify-between py-3 px-3 -mx-3 rounded-xl hover:bg-slate-800/50 cursor-pointer transition-colors">
                             <div>
-                                <h4 className="text-slate-300 text-sm font-medium group-hover:text-cyan-400 transition-colors">#{item.title}</h4>
-                                <span className="text-slate-600 text-xs">{item.count} posts</span>
+                                <h4 className="text-slate-300 text-sm font-medium group-hover:text-cyan-400 transition-colors">#{item.tag}</h4>
+                                <span className="text-slate-600 text-xs">{item.count} {item.count === 1 ? 'post' : 'posts'}</span>
                             </div>
                             <ArrowUpRight className="w-4 h-4 text-slate-700 group-hover:text-cyan-500 opacity-0 group-hover:opacity-100 transition-all" />
-                        </div>
-                    ))}
+                        </Link>
+                    )) : (
+                        <p className="text-xs text-slate-600 px-3">No trending topics yet</p>
+                    )}
                 </div>
             </div>
 

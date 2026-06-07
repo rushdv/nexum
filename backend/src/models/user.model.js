@@ -68,4 +68,20 @@ async function findPublicById(userId) {
   return user;
 }
 
-export { findMe, findPublicById };
+async function updateProfile(userId, { username, email }) {
+  const query = `
+    UPDATE users
+    SET username = COALESCE($1, username), email = COALESCE($2, email)
+    WHERE id = $3
+    RETURNING id, username, email, created_at
+  `;
+  const { rows } = await pool.query(query, [username || null, email || null, userId]);
+  return rows[0];
+}
+
+async function updatePassword(userId, passwordHash) {
+  const query = `UPDATE users SET password_hash = $1 WHERE id = $2`;
+  await pool.query(query, [passwordHash, userId]);
+}
+
+export { findMe, findPublicById, updateProfile, updatePassword };

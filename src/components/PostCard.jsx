@@ -1,11 +1,13 @@
-import { MessageCircle, Heart, Share2, MoreHorizontal, Bookmark, PenTool, Edit3, Trash2, X, Check } from 'lucide-react';
+import { MessageCircle, Heart, Share2, MoreHorizontal, Bookmark, PenTool, Edit3, Trash2, X, Check, BookmarkCheck } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api';
 
 const PostCard = ({ post, onDelete }) => {
-    const { id, author, time, content, image, stats, is_liked } = post;
+    const { id, author, time, content, image, stats, is_liked, is_bookmarked } = post;
     const [liked, setLiked] = useState(is_liked);
     const [likesCount, setLikesCount] = useState(stats.likes);
+    const [bookmarked, setBookmarked] = useState(is_bookmarked);
     const [showComments, setShowComments] = useState(false);
     const [comments, setComments] = useState([]);
     const [commentContent, setCommentContent] = useState("");
@@ -68,6 +70,29 @@ const PostCard = ({ post, onDelete }) => {
         } catch (err) {
             console.error("Error editing post:", err);
             setError("Failed to update post");
+        }
+    };
+
+    const handleShare = async () => {
+        const url = `${window.location.origin}/?post=${id}`;
+        if (navigator.share) {
+            try { await navigator.share({ title: "Check this out", url }); } catch (_) {}
+        } else {
+            try {
+                await navigator.clipboard.writeText(url);
+                setError("Link copied to clipboard!");
+                setTimeout(() => setError(""), 2000);
+            } catch (_) {}
+        }
+    };
+
+    const handleBookmark = async () => {
+        setError("");
+        try {
+            const res = await api.post(`/bookmarks/${id}`);
+            setBookmarked(res.data.bookmarked);
+        } catch (err) {
+            console.error("Error toggling bookmark:", err);
         }
     };
 
@@ -140,7 +165,17 @@ const PostCard = ({ post, onDelete }) => {
                         </div>
                     </div>
                 ) : (
-                    <p className="text-slate-300 text-[16px] leading-[1.7] mb-6 font-medium whitespace-pre-wrap">{content}</p>
+                    <p className="text-slate-300 text-[16px] leading-[1.7] mb-6 font-medium whitespace-pre-wrap">
+                        {content.split(/(#\w+|@\w+)/g).map((part, i) => {
+                            if (part.startsWith('#')) {
+                                return <Link key={i} to={`/explore?q=${encodeURIComponent(part.slice(1))}`} className="text-cyan-400 hover:underline">{part}</Link>;
+                            }
+                            if (part.startsWith('@')) {
+                                return <Link key={i} to={`/profile/${part.slice(1)}`} className="text-indigo-400 hover:underline">{part}</Link>;
+                            }
+                            return part;
+                        })}
+                    </p>
                 )}
                 {image && (
                     <div className="mb-6 rounded-2xl overflow-hidden bg-slate-800">
@@ -150,8 +185,12 @@ const PostCard = ({ post, onDelete }) => {
             </div>
 
             <div className="flex justify-end items-center gap-6 relative z-10 pt-2 border-b border-slate-700/30 pb-4">
-                <button className="flex items-center gap-2 group/action"><div className="p-2.5 rounded-xl bg-transparent group-hover/action:bg-slate-700/50 text-slate-500 group-hover/action:text-slate-300 transition-all"><Bookmark className="w-5 h-5 stroke-[2px]" /></div></button>
-                <button className="flex items-center gap-2 group/action"><span className="text-xs font-semibold text-slate-500 opacity-0 group-hover/action:opacity-100 transition-all transform translate-x-2 group-hover/action:translate-x-0">Share</span><div className="p-2.5 rounded-xl bg-transparent group-hover/action:bg-indigo-500/10 text-slate-500 group-hover/action:text-indigo-400 transition-all"><Share2 className="w-5 h-5 stroke-[1.5px]" /></div></button>
+                <button onClick={handleBookmark} className="flex items-center gap-2 group/action">
+                    <div className={`p-2.5 rounded-xl transition-all ${bookmarked ? 'bg-cyan-500/10 text-cyan-400' : 'bg-transparent group-hover/action:bg-slate-700/50 text-slate-500 group-hover/action:text-slate-300'}`}>
+                        {bookmarked ? <BookmarkCheck className="w-5 h-5 stroke-[2px]" /> : <Bookmark className="w-5 h-5 stroke-[2px]" />}
+                    </div>
+                </button>
+                <button onClick={handleShare} className="flex items-center gap-2 group/action"><span className="text-xs font-semibold text-slate-500 opacity-0 group-hover/action:opacity-100 transition-all transform translate-x-2 group-hover/action:translate-x-0">Share</span><div className="p-2.5 rounded-xl bg-transparent group-hover/action:bg-indigo-500/10 text-slate-500 group-hover/action:text-indigo-400 transition-all"><Share2 className="w-5 h-5 stroke-[1.5px]" /></div></button>
 
                 <button onClick={handleCommentToggle} className="flex items-center gap-2 group/action">
                     <span className="text-xs font-semibold text-slate-400">{comments.length || stats.comments}</span>
