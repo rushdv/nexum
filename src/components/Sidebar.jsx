@@ -1,17 +1,25 @@
 import { Home, Compass, Bell, Mail, Bookmark, User, Settings, PenTool } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
     const { user } = useAuth();
+    const location = useLocation();
+
     const navItems = [
-        { icon: Home, label: 'Home', active: true },
-        { icon: Compass, label: 'Explore' },
-        { icon: Bell, label: 'Notifications' },
-        { icon: Mail, label: 'Messages' },
-        { icon: Bookmark, label: 'Bookmarks' },
-        { icon: User, label: 'Profile' },
-        { icon: Settings, label: 'Settings' },
+        { icon: Home, label: 'Home', to: '/' },
+        { icon: Compass, label: 'Explore', to: '/explore' },
+        { icon: Bell, label: 'Notifications', to: '/notifications' },
+        { icon: Mail, label: 'Messages', to: '/messages' },
+        { icon: Bookmark, label: 'Bookmarks', to: '/bookmarks' },
+        { icon: User, label: 'Profile', to: '/profile' },
+        { icon: Settings, label: 'Settings', to: '/settings' },
     ];
+
+    const isActive = (to) => {
+        if (to === '/') return location.pathname === '/';
+        return location.pathname.startsWith(to);
+    };
 
     return (
         <>
@@ -21,25 +29,28 @@ const Sidebar = () => {
                 </div>
 
                 <nav className="flex-1 flex flex-col gap-6">
-                    {navItems.map((item, index) => (
-                        <div key={index} className="group relative flex items-center justify-center">
-                            <a className={`
-                                w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 relative
-                                ${item.active
-                                    ? 'text-cyan-400 bg-slate-800 shadow-md shadow-black/20'
-                                    : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800/50'
-                                }
-                            `}>
-                                <item.icon className="w-6 h-6 stroke-[2px]" />
-                                {item.active && (
-                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-cyan-500 rounded-l-full"></div>
-                                )}
-                            </a>
-                            <div className="absolute right-full mr-4 px-3 py-1.5 bg-slate-800 text-slate-200 text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl border border-white/5">
-                                {item.label}
+                    {navItems.map((item, index) => {
+                        const active = isActive(item.to);
+                        return (
+                            <div key={index} className="group relative flex items-center justify-center">
+                                <Link to={item.to} className={`
+                                    w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 relative
+                                    ${active
+                                        ? 'text-cyan-400 bg-slate-800 shadow-md shadow-black/20'
+                                        : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800/50'
+                                    }
+                                `}>
+                                    <item.icon className="w-6 h-6 stroke-[2px]" />
+                                    {active && (
+                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-cyan-500 rounded-l-full"></div>
+                                    )}
+                                </Link>
+                                <div className="absolute right-full mr-4 px-3 py-1.5 bg-slate-800 text-slate-200 text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl border border-white/5">
+                                    {item.label}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </nav>
 
                 <button className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 hover:border-cyan-500 text-cyan-500 flex items-center justify-center transition-all hover:rotate-90 shadow-lg shadow-black/20">
@@ -47,26 +58,28 @@ const Sidebar = () => {
                 </button>
 
                 {user && (
-                    <div className="w-10 h-10 rounded-full bg-slate-700 ring-2 ring-slate-800 hover:ring-cyan-500/50 transition-all cursor-pointer mt-auto overflow-hidden">
+                    <Link to="/profile" className="w-10 h-10 rounded-full bg-slate-700 ring-2 ring-slate-800 hover:ring-cyan-500/50 transition-all cursor-pointer mt-auto overflow-hidden">
                         <img
                             src={`https://ui-avatars.com/api/?name=${user.username}&background=random&color=fff`}
                             alt={user.username}
                             className="w-full h-full object-cover"
                         />
-                    </div>
+                    </Link>
                 )}
             </aside>
 
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0f172a]/90 backdrop-blur-xl border-t border-slate-800 p-4 flex justify-between items-center z-50 safe-area-bottom">
-                {navItems.slice(0, 5).map((item, index) => (
-                    <a key={index} className={`flex flex-col items-center gap-1 ${item.active ? 'text-cyan-400' : 'text-slate-400'}`}>
-                        <item.icon className={`w-6 h-6 ${item.active ? 'fill-cyan-500/10' : ''}`} />
-                    </a>
-                ))}
+                {navItems.slice(0, 5).map((item, index) => {
+                    const active = isActive(item.to);
+                    return (
+                        <Link key={index} to={item.to} className={`flex flex-col items-center gap-1 ${active ? 'text-cyan-400' : 'text-slate-400'}`}>
+                            <item.icon className={`w-6 h-6 ${active ? 'fill-cyan-500/10' : ''}`} />
+                        </Link>
+                    );
+                })}
             </div>
         </>
     );
 };
 
 export default Sidebar;
-

@@ -1,5 +1,6 @@
 import LikeModel from "../models/like.model.js";
 import PostModel from "../models/post.model.js";
+import NotificationModel from "../models/notification.model.js";
 
 export const toggleLike = async (req, res, next) => {
   try {
@@ -19,6 +20,20 @@ export const toggleLike = async (req, res, next) => {
     const likeCount = await LikeModel.getCountsByPostId(postId);
 
     if (result.liked) {
+      await NotificationModel.create({
+        userId: post.user_id,
+        actorId: userId,
+        postId: Number(postId),
+        type: "like"
+      });
+      const io = req.app.get("io");
+      if (io) {
+        io.to(`user:${post.user_id}`).emit("notification", {
+          type: "like",
+          actorId: userId,
+          postId: Number(postId),
+        });
+      }
       res.json({
         message: "Post liked successfully",
         liked: true,

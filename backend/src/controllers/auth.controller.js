@@ -13,6 +13,18 @@ export const register = async (req, res, next) => {
             return res.status(400).json({ message: "All fields required" });
         }
 
+        if (username.length < 3) {
+            return res.status(400).json({ message: "Username must be at least 3 characters" });
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ message: "Invalid email format" });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters" });
+        }
+
         const existingUser = await UserModel.findByEmail(email);
         if (existingUser) {
             return res.status(409).json({ message: "User already exists" });

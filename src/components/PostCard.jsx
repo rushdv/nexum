@@ -1,8 +1,8 @@
-import { MessageCircle, Heart, Share2, MoreHorizontal, Bookmark } from 'lucide-react';
+import { MessageCircle, Heart, Share2, MoreHorizontal, Bookmark, PenTool, Edit3, Trash2, X, Check } from 'lucide-react';
 import { useState } from 'react';
 import api from '../api';
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, onDelete }) => {
     const { id, author, time, content, image, stats, is_liked } = post;
     const [liked, setLiked] = useState(is_liked);
     const [likesCount, setLikesCount] = useState(stats.likes);
@@ -10,15 +10,20 @@ const PostCard = ({ post }) => {
     const [comments, setComments] = useState([]);
     const [commentContent, setCommentContent] = useState("");
     const [isCommenting, setIsCommenting] = useState(false);
+    const [error, setError] = useState("");
+    const [showMenu, setShowMenu] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editContent, setEditContent] = useState(content);
 
     const handleLike = async () => {
+        setError("");
         try {
-            const res = await api.post(`/likes/${id}/like`);
+            const res = await api.post(`/likes/${id}`);
             setLiked(res.data.liked);
             setLikesCount(prev => res.data.liked ? prev + 1 : prev - 1);
         } catch (err) {
             console.error("Error liking post:", err);
-            if (err.response?.status === 401) alert("Please login to like posts");
+            setError(err.response?.status === 401 ? "Please login to like posts" : "Failed to like post");
         }
     };
 
@@ -39,6 +44,7 @@ const PostCard = ({ post }) => {
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!commentContent.trim()) return;
+        setError("");
         setIsCommenting(true);
         try {
             const res = await api.post(`/comments/${id}`, { content: commentContent });
@@ -46,15 +52,44 @@ const PostCard = ({ post }) => {
             setCommentContent("");
         } catch (err) {
             console.error("Error posting comment:", err);
-            if (err.response?.status === 401) alert("Please login to comment");
+            setError(err.response?.status === 401 ? "Please login to comment" : "Failed to post comment");
         } finally {
             setIsCommenting(false);
         }
     };
 
+    const handleEdit = async () => {
+        if (!editContent.trim()) return;
+        setError("");
+        try {
+            await api.put(`/posts/${id}`, { content: editContent });
+            setIsEditing(false);
+            post.content = editContent;
+        } catch (err) {
+            console.error("Error editing post:", err);
+            setError("Failed to update post");
+        }
+    };
+
+    const handleDelete = async () => {
+        setError("");
+        try {
+            await api.delete(`/posts/${id}`);
+            if (onDelete) onDelete(id);
+        } catch (err) {
+            console.error("Error deleting post:", err);
+            setError("Failed to delete post");
+        }
+    };
+
     return (
         <article className="border-none bg-[#162032] p-6 lg:p-8 rounded-[32px] mb-8 shadow-2xl shadow-black/20 hover:shadow-black/30 transition-shadow duration-500 cursor-default group relative overflow-hidden">
-            {/* ... Header and Content ... */}
+            {error && (
+                <div className="mb-4 p-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs text-center">
+                    {error}
+                </div>
+            )}
+
             <div className="flex justify-between items-start mb-6 relative z-10">
                 <div className="flex items-center gap-4">
                     <img src={author.avatar} alt={author.name} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-transparent group-hover:ring-cyan-500/20 transition-all" />
@@ -63,11 +98,50 @@ const PostCard = ({ post }) => {
                         <p className="text-slate-500 text-sm">{time}</p>
                     </div>
                 </div>
-                <button className="text-slate-600 hover:text-slate-300 transition-colors"><MoreHorizontal className="w-5 h-5" /></button>
+                <div className="relative">
+                    <button onClick={() => setShowMenu(!showMenu)} className="text-slate-600 hover:text-slate-300 transition-colors">
+                        <MoreHorizontal className="w-5 h-5" />
+                    </button>
+                    {showMenu && (
+                        <div className="absolute right-0 top-8 bg-slate-800 rounded-xl border border-slate-700 shadow-xl p-1 min-w-[140px] z-50">
+                            <button
+                                onClick={() => { setIsEditing(true); setShowMenu(false); }}
+                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                                <Edit3 className="w-4 h-4" /> Edit
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            >
+                                <Trash2 className="w-4 h-4" /> Delete
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="relative z-10">
-                <p className="text-slate-300 text-[16px] leading-[1.7] mb-6 font-medium whitespace-pre-wrap">{content}</p>
+                {isEditing ? (
+                    <div className="space-y-3">
+                        <textarea
+                            className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            rows={3}
+                        />
+                        <div className="flex gap-2">
+                            <button onClick={handleEdit} className="btn btn-xs rounded-full bg-cyan-600 hover:bg-cyan-500 text-white border-none">
+                                <Check className="w-3 h-3" /> Save
+                            </button>
+                            <button onClick={() => { setIsEditing(false); setEditContent(content); }} className="btn btn-xs rounded-full bg-slate-700 hover:bg-slate-600 text-slate-300 border-none">
+                                <X className="w-3 h-3" /> Cancel
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-slate-300 text-[16px] leading-[1.7] mb-6 font-medium whitespace-pre-wrap">{content}</p>
+                )}
                 {image && (
                     <div className="mb-6 rounded-2xl overflow-hidden bg-slate-800">
                         <img src={image} alt="Post Visual" className="w-full h-auto object-cover max-h-[600px] hover:scale-[1.01] transition-transform duration-500 ease-out" />
@@ -75,7 +149,6 @@ const PostCard = ({ post }) => {
                 )}
             </div>
 
-            {/* Actions */}
             <div className="flex justify-end items-center gap-6 relative z-10 pt-2 border-b border-slate-700/30 pb-4">
                 <button className="flex items-center gap-2 group/action"><div className="p-2.5 rounded-xl bg-transparent group-hover/action:bg-slate-700/50 text-slate-500 group-hover/action:text-slate-300 transition-all"><Bookmark className="w-5 h-5 stroke-[2px]" /></div></button>
                 <button className="flex items-center gap-2 group/action"><span className="text-xs font-semibold text-slate-500 opacity-0 group-hover/action:opacity-100 transition-all transform translate-x-2 group-hover/action:translate-x-0">Share</span><div className="p-2.5 rounded-xl bg-transparent group-hover/action:bg-indigo-500/10 text-slate-500 group-hover/action:text-indigo-400 transition-all"><Share2 className="w-5 h-5 stroke-[1.5px]" /></div></button>
@@ -95,7 +168,6 @@ const PostCard = ({ post }) => {
                 </button>
             </div>
 
-            {/* Comments Section */}
             {showComments && (
                 <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                     <form onSubmit={handleCommentSubmit} className="flex gap-3">
@@ -136,4 +208,3 @@ const PostCard = ({ post }) => {
 };
 
 export default PostCard;
-

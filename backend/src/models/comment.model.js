@@ -9,7 +9,10 @@ const CommentModel = {
     `;
     const values = [userId, postId, content];
     const { rows } = await pool.query(query, values);
-    return rows[0];
+    const comment = rows[0];
+    const userQuery = `SELECT username FROM users WHERE id = $1`;
+    const { rows: userRows } = await pool.query(userQuery, [userId]);
+    return { ...comment, username: userRows[0]?.username || 'Unknown' };
   },
 
   async getByPostId(postId) {
