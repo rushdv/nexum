@@ -2,21 +2,22 @@ import pool from "../config/db.js";
 
 const PostModel = {
     // create new post
-    async create({ userId, content }) {
+    async create({ userId, content, imageUrl }) {
         const query = `
-      INSERT INTO posts (user_id, content)
-      VALUES ($1, $2)
-      RETURNING id, user_id, content, created_at
+      INSERT INTO posts (user_id, content, image_url)
+      VALUES ($1, $2, $3)
+      RETURNING id, user_id, content, image_url, created_at
     `;
-        const values = [userId, content];
+        const values = [userId, content, imageUrl || null];
         const { rows } = await pool.query(query, values);
         return rows[0];
     },
 
-    // get all posts (latest first)
-    async findAll(currentUserId = null) {
+    // get all posts (latest first) with pagination
+    async findAll(currentUserId = null, page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
         const query = `
-      SELECT p.id, p.content, p.created_at,
+      SELECT p.id, p.content, p.image_url, p.created_at,
              u.id AS user_id, u.username,
              (SELECT COUNT(*) FROM likes WHERE post_id = p.id) AS likes_count,
              (SELECT COUNT(*) FROM comments WHERE post_id = p.id) AS comments_count,
@@ -24,8 +25,9 @@ const PostModel = {
       FROM posts p
       JOIN users u ON p.user_id = u.id
       ORDER BY p.created_at DESC
+      LIMIT $2 OFFSET $3
     `;
-        const { rows } = await pool.query(query, [currentUserId]);
+        const { rows } = await pool.query(query, [currentUserId, limit, offset]);
         return rows;
     },
 
@@ -39,6 +41,18 @@ const PostModel = {
       WHERE p.id = $1
     `;
         const { rows } = await pool.query(query, [postId]);
+        return rows[0];
+    },
+
+    // update post (owner only)
+    async updateById(postId, userId, { content, imageUrl }) {
+        const query = `
+      UPDATE posts
+      SET content = COALESCE($1, content), image_url = COALESCE($2, image_url)
+      WHERE id = $3 AND user_id = $4
+      RETURNING id, user_id, content, image_url, created_at
+    `;
+        const { rows } = await pool.query(query, [content, imageUrl, postId, userId]);
         return rows[0];
     },
 
