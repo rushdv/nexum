@@ -32,7 +32,18 @@ async function findMe(userId) {
     WHERE id = $1
   `;
   const { rows } = await pool.query(query, [userId]);
-  return rows[0];
+  const user = rows[0];
+  if (user) {
+    const followersQuery = `SELECT COUNT(*) FROM followers WHERE following_id = $1`;
+    const followingQuery = `SELECT COUNT(*) FROM followers WHERE follower_id = $1`;
+    const [followersRes, followingRes] = await Promise.all([
+      pool.query(followersQuery, [userId]),
+      pool.query(followingQuery, [userId])
+    ]);
+    user.followers_count = parseInt(followersRes.rows[0].count);
+    user.following_count = parseInt(followingRes.rows[0].count);
+  }
+  return user;
 }
 
 // get public profile by user id
@@ -43,7 +54,18 @@ async function findPublicById(userId) {
     WHERE id = $1
   `;
   const { rows } = await pool.query(query, [userId]);
-  return rows[0];
+  const user = rows[0];
+  if (user) {
+    const followersQuery = `SELECT COUNT(*) FROM followers WHERE following_id = $1`;
+    const followingQuery = `SELECT COUNT(*) FROM followers WHERE follower_id = $1`;
+    const [followersRes, followingRes] = await Promise.all([
+      pool.query(followersQuery, [userId]),
+      pool.query(followingQuery, [userId])
+    ]);
+    user.followers_count = parseInt(followersRes.rows[0].count);
+    user.following_count = parseInt(followingRes.rows[0].count);
+  }
+  return user;
 }
 
 export { findMe, findPublicById };
