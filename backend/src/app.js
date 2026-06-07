@@ -14,6 +14,9 @@ import errorHandler from "./middlewares/error.middleware.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import followRoutes from "./routes/follow.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
+import bookmarkRoutes from "./routes/bookmark.routes.js";
+import messageRoutes from "./routes/message.routes.js";
+import { getTrending } from "./controllers/trend.controller.js";
 
 const app = express();
 
@@ -45,6 +48,9 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/follow", followRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/bookmarks", bookmarkRoutes);
+app.use("/api/messages", messageRoutes);
+app.get("/api/trending", getTrending);
 
 // error handler (always last)
 app.use(errorHandler);

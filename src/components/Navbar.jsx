@@ -2,26 +2,31 @@ import { useState, useEffect } from 'react';
 import { Search, Bell, MessageSquare, LogOut } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
+    const { socket } = useSocket();
     const [searchQuery, setSearchQuery] = useState('');
     const [unreadNotifications, setUnreadNotifications] = useState(0);
     const navigate = useNavigate();
 
     useEffect(() => {
         if (!user) return;
-        const fetchUnread = async () => {
-            try {
-                const res = await api.get("/notifications");
-                setUnreadNotifications(res.data.filter(n => !n.is_read).length);
-            } catch (_) {}
-        };
-        fetchUnread();
-        const interval = setInterval(fetchUnread, 30000);
-        return () => clearInterval(interval);
+        api.get("/notifications").then(res => {
+            setUnreadNotifications(res.data.filter(n => !n.is_read).length);
+        }).catch(() => {});
     }, [user]);
+
+    useEffect(() => {
+        if (!socket) return;
+        const handler = () => {
+            setUnreadNotifications(prev => prev + 1);
+        };
+        socket.on("notification", handler);
+        return () => socket.off("notification", handler);
+    }, [socket]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -56,10 +61,9 @@ const Navbar = () => {
 
             <div className="flex-none w-64 flex justify-end items-center gap-1 sm:gap-2">
                 <div className="flex items-center gap-1 mr-4 border-r border-white/5 pr-4">
-                    <button className="p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-white/5 transition-all relative group">
+                    <Link to="/messages" className="p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-white/5 transition-all relative group">
                         <MessageSquare className="w-5 h-5 stroke-[1.5px]" />
-                        <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-indigo-500 rounded-full ring-2 ring-[#0f172a]"></span>
-                    </button>
+                    </Link>
 
                     <Link to="/notifications" className="p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-white/5 transition-all relative group">
                         <Bell className="w-5 h-5 stroke-[1.5px]" />
@@ -94,4 +98,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

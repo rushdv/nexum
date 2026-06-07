@@ -16,6 +16,7 @@ const Feed = () => {
     const [imageUrl, setImageUrl] = useState("");
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef(null);
+    const sentinelRef = useRef(null);
     const { socket } = useSocket();
 
     useEffect(() => {
@@ -34,7 +35,8 @@ const Feed = () => {
                     comments: parseInt(post.comments_count) || 0
                 },
                 image: post.image_url,
-                is_liked: post.is_liked
+                is_liked: post.is_liked,
+                is_bookmarked: post.is_bookmarked
             };
             setPosts(prev => [transformed, ...prev]);
         };
@@ -58,7 +60,8 @@ const Feed = () => {
                     comments: parseInt(post.comments_count) || 0
                 },
                 image: post.image_url,
-                is_liked: post.is_liked
+                is_liked: post.is_liked,
+                is_bookmarked: post.is_bookmarked
             }));
             if (append) {
                 setPosts(prev => [...prev, ...transformedPosts]);
@@ -78,6 +81,20 @@ const Feed = () => {
     useEffect(() => {
         fetchPosts();
     }, []);
+
+    useEffect(() => {
+        if (!sentinelRef.current || !hasMore) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !loadingMore) {
+                    loadMore();
+                }
+            },
+            { threshold: 0.1 }
+        );
+        observer.observe(sentinelRef.current);
+        return () => observer.disconnect();
+    }, [hasMore, loadingMore, page]);
 
     const handleImageSelect = async (e) => {
         const file = e.target.files[0];
@@ -218,14 +235,11 @@ const Feed = () => {
                             <PostCard key={post.id} post={post} />
                         ))}
                         {hasMore && (
-                            <div className="text-center py-4">
-                                <button
-                                    onClick={loadMore}
-                                    disabled={loadingMore}
-                                    className="btn btn-sm rounded-full px-6 bg-slate-800 hover:bg-slate-700 text-slate-300 border-none"
-                                >
-                                    {loadingMore ? 'Loading...' : 'Load more'}
-                                </button>
+                            <div ref={sentinelRef} className="h-4" />
+                        )}
+                        {loadingMore && (
+                            <div className="flex justify-center py-4">
+                                <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
                             </div>
                         )}
                     </>
