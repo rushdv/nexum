@@ -8,11 +8,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.get("/me", authMiddleware, getMe);
 
-// Google OAuth Routes
+// Google OAuth placeholder
 router.get("/google", googleAuth);
-router.get("/google/callback", (req, res) => {
-    // This will be handled by passport or custom logic
-    res.send("Google Callback reached! (Backend logic coming soon)");
-});
 
 export default router;
