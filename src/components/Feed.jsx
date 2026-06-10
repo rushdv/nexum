@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Image, Smile, Calendar, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import PostCard from './PostCard';
 import api from "../api";
 import { useSocket } from "../context/SocketContext";
@@ -24,6 +25,7 @@ const Feed = () => {
         const handler = (post) => {
             const transformed = {
                 id: post.id,
+                user_id: post.user_id,
                 content: post.content,
                 time: new Date(post.created_at).toLocaleDateString(),
                 author: {
@@ -49,6 +51,7 @@ const Feed = () => {
             const res = await api.get(`/posts?page=${pageNum}&limit=10`);
             const transformedPosts = res.data.map(post => ({
                 id: post.id,
+                user_id: post.user_id,
                 content: post.content,
                 time: new Date(post.created_at).toLocaleDateString(),
                 author: {
@@ -69,8 +72,8 @@ const Feed = () => {
                 setPosts(transformedPosts);
             }
             setHasMore(transformedPosts.length === 10);
-        } catch (err) {
-            console.error("Error fetching posts:", err);
+        } catch {
+            toast.error("Failed to load posts");
             setError("Failed to load posts");
         } finally {
             setIsLoading(false);
@@ -107,8 +110,8 @@ const Feed = () => {
                 headers: { "Content-Type": "multipart/form-data" },
             });
             setImageUrl(res.data.url);
-        } catch (err) {
-            console.error("Error uploading image:", err);
+        } catch {
+            toast.error("Failed to upload image");
             setError("Failed to upload image");
         } finally {
             setUploading(false);
@@ -126,7 +129,7 @@ const Feed = () => {
             setImageUrl("");
             fetchPosts();
         } catch (err) {
-            console.error("Error creating post:", err);
+            toast.error(err.response?.data?.message || "Failed to create post");
             setError(err.response?.data?.message || "Failed to create post");
         } finally {
             setIsSubmitting(false);
