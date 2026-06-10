@@ -1,10 +1,14 @@
 import { MessageCircle, Heart, Share2, MoreHorizontal, Bookmark, PenTool, Edit3, Trash2, X, Check, BookmarkCheck } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api from '../api';
+import { useAuth } from '../context/AuthContext';
+import { sanitize } from '../utils/sanitize';
 
 const PostCard = ({ post, onDelete }) => {
-    const { id, author, time, content, image, stats, is_liked, is_bookmarked } = post;
+    const { user: currentUser } = useAuth();
+    const { id, author, time, content, image, stats, is_liked, is_bookmarked, user_id } = post;
     const [liked, setLiked] = useState(is_liked);
     const [likesCount, setLikesCount] = useState(stats.likes);
     const [bookmarked, setBookmarked] = useState(is_bookmarked);
@@ -16,6 +20,30 @@ const PostCard = ({ post, onDelete }) => {
     const [showMenu, setShowMenu] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(content);
+    const [following, setFollowing] = useState(null);
+    const [followLoading, setFollowLoading] = useState(false);
+
+    const isOwnPost = Number(user_id) === Number(currentUser?.id);
+
+    useEffect(() => {
+        if (!isOwnPost && user_id) {
+            api.get(`/follow/${user_id}/status`).then(res => {
+                setFollowing(res.data.following);
+            }).catch(() => {});
+        }
+    }, [user_id]);
+
+    const handleFollow = async () => {
+        setFollowLoading(true);
+        try {
+            const res = await api.post(`/follow/${user_id}`);
+            setFollowing(res.data.following);
+        } catch {
+            toast.error("Failed to toggle follow");
+        } finally {
+            setFollowLoading(false);
+        }
+    };
 
     const handleLike = async () => {
         setError("");
@@ -24,7 +52,7 @@ const PostCard = ({ post, onDelete }) => {
             setLiked(res.data.liked);
             setLikesCount(prev => res.data.liked ? prev + 1 : prev - 1);
         } catch (err) {
-            console.error("Error liking post:", err);
+            toast.error(err.response?.status === 401 ? "Please login to like posts" : "Failed to like post");
             setError(err.response?.status === 401 ? "Please login to like posts" : "Failed to like post");
         }
     };
@@ -33,8 +61,8 @@ const PostCard = ({ post, onDelete }) => {
         try {
             const res = await api.get(`/comments/${id}`);
             setComments(res.data);
-        } catch (err) {
-            console.error("Error fetching comments:", err);
+        } catch {
+            toast.error("Failed to load comments");
         }
     };
 
@@ -53,7 +81,7 @@ const PostCard = ({ post, onDelete }) => {
             setComments(prev => [...prev, res.data]);
             setCommentContent("");
         } catch (err) {
-            console.error("Error posting comment:", err);
+            toast.error(err.response?.status === 401 ? "Please login to comment" : "Failed to post comment");
             setError(err.response?.status === 401 ? "Please login to comment" : "Failed to post comment");
         } finally {
             setIsCommenting(false);
@@ -67,8 +95,8 @@ const PostCard = ({ post, onDelete }) => {
             await api.put(`/posts/${id}`, { content: editContent });
             setIsEditing(false);
             post.content = editContent;
-        } catch (err) {
-            console.error("Error editing post:", err);
+        } catch {
+            toast.error("Failed to update post");
             setError("Failed to update post");
         }
     };
@@ -80,8 +108,7 @@ const PostCard = ({ post, onDelete }) => {
         } else {
             try {
                 await navigator.clipboard.writeText(url);
-                setError("Link copied to clipboard!");
-                setTimeout(() => setError(""), 2000);
+                toast.success("Link copied to clipboard!");
             } catch (_) {}
         }
     };
@@ -91,8 +118,8 @@ const PostCard = ({ post, onDelete }) => {
         try {
             const res = await api.post(`/bookmarks/${id}`);
             setBookmarked(res.data.bookmarked);
-        } catch (err) {
-            console.error("Error toggling bookmark:", err);
+        } catch {
+            toast.error("Failed to toggle bookmark");
         }
     };
 
@@ -101,8 +128,8 @@ const PostCard = ({ post, onDelete }) => {
         try {
             await api.delete(`/posts/${id}`);
             if (onDelete) onDelete(id);
-        } catch (err) {
-            console.error("Error deleting post:", err);
+        } catch {
+            toast.error("Failed to delete post");
             setError("Failed to delete post");
         }
     };
@@ -117,17 +144,34 @@ const PostCard = ({ post, onDelete }) => {
 
             <div className="flex justify-between items-start mb-6 relative z-10">
                 <div className="flex items-center gap-4">
-                    <img src={author.avatar} alt={author.name} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-transparent group-hover:ring-cyan-500/20 transition-all" />
-                    <div>
-                        <h3 className="text-slate-200 font-bold text-[15px] leading-tight group-hover:text-cyan-400 transition-colors cursor-pointer">{author.name}</h3>
-                        <p className="text-slate-500 text-sm">{time}</p>
+                    <Link to={isOwnPost ? "/profile" : `/profile/${user_id}`}>
+                        <img src={author.avatar} alt={author.name} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-transparent group-hover:ring-cyan-500/20 transition-all" />
+                    </Link>
+                    <div className="flex items-center gap-3">
+                        <div>
+                            <Link to={isOwnPost ? "/profile" : `/profile/${user_id}`} className="text-slate-200 font-bold text-[15px] leading-tight hover:text-cyan-400 transition-colors">{author.name}</Link>
+                            <p className="text-slate-500 text-sm">{time}</p>
+                        </div>
+                        {!isOwnPost && following !== null && (
+                            <button
+                                onClick={handleFollow}
+                                disabled={followLoading}
+                                className={`text-xs font-semibold px-3 py-1 rounded-full transition-all ${
+                                    following
+                                        ? 'bg-slate-700/50 text-slate-400 hover:bg-red-500/10 hover:text-red-400'
+                                        : 'bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600/30'
+                                }`}
+                            >
+                                {followLoading ? '...' : following ? 'Following' : 'Follow'}
+                            </button>
+                        )}
                     </div>
                 </div>
                 <div className="relative">
                     <button onClick={() => setShowMenu(!showMenu)} className="text-slate-600 hover:text-slate-300 transition-colors">
                         <MoreHorizontal className="w-5 h-5" />
                     </button>
-                    {showMenu && (
+                    {showMenu && Number(user_id) === Number(currentUser?.id) && (
                         <div className="absolute right-0 top-8 bg-slate-800 rounded-xl border border-slate-700 shadow-xl p-1 min-w-[140px] z-50">
                             <button
                                 onClick={() => { setIsEditing(true); setShowMenu(false); }}
@@ -166,7 +210,7 @@ const PostCard = ({ post, onDelete }) => {
                     </div>
                 ) : (
                     <p className="text-slate-300 text-[16px] leading-[1.7] mb-6 font-medium whitespace-pre-wrap">
-                        {content.split(/(#\w+|@\w+)/g).map((part, i) => {
+                        {sanitize(content).split(/(#\w+|@\w+)/g).map((part, i) => {
                             if (part.startsWith('#')) {
                                 return <Link key={i} to={`/explore?q=${encodeURIComponent(part.slice(1))}`} className="text-cyan-400 hover:underline">{part}</Link>;
                             }
@@ -233,7 +277,7 @@ const PostCard = ({ post, onDelete }) => {
                                         <span className="text-xs font-bold text-slate-200">{c.username}</span>
                                         <span className="text-[10px] text-slate-500">{new Date(c.created_at).toLocaleDateString()}</span>
                                     </div>
-                                    <p className="text-sm text-slate-400">{c.content}</p>
+                                    <p className="text-sm text-slate-400">{sanitize(c.content)}</p>
                                 </div>
                             </div>
                         )) : (

@@ -56,16 +56,18 @@ const MessageModel = {
     return rows;
   },
 
-  async getMessages(conversationId) {
+  async getMessages(conversationId, page = 1, limit = 50) {
+    const offset = (page - 1) * limit;
     const query = `
       SELECT m.id, m.sender_id, m.content, m.created_at, u.username
       FROM messages m
       JOIN users u ON m.sender_id = u.id
       WHERE m.conversation_id = $1
-      ORDER BY m.created_at ASC
+      ORDER BY m.created_at DESC
+      LIMIT $2 OFFSET $3
     `;
-    const { rows } = await pool.query(query, [conversationId]);
-    return rows;
+    const { rows } = await pool.query(query, [conversationId, limit, offset]);
+    return rows.reverse();
   },
 
   async getParticipants(conversationId) {

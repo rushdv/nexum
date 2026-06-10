@@ -69,7 +69,7 @@ const Sidebar = () => {
             </aside>
 
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0f172a]/90 backdrop-blur-xl border-t border-slate-800 p-4 flex justify-between items-center z-50 safe-area-bottom">
-                {navItems.slice(0, 5).map((item, index) => {
+                {navItems.map((item, index) => {
                     const active = isActive(item.to);
                     return (
                         <Link key={index} to={item.to} className={`flex flex-col items-center gap-1 ${active ? 'text-cyan-400' : 'text-slate-400'}`}>

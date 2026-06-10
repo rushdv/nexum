@@ -66,6 +66,26 @@ const PostModel = {
     `;
         const { rows } = await pool.query(query, [postId, userId]);
         return rows[0];
+    },
+
+    // search posts by content
+    async search({ query: searchQuery, currentUserId = null, page = 1, limit = 10 }) {
+        const offset = (page - 1) * limit;
+        const query = `
+      SELECT p.id, p.content, p.image_url, p.created_at,
+             u.id AS user_id, u.username,
+             (SELECT COUNT(*) FROM likes WHERE post_id = p.id) AS likes_count,
+             (SELECT COUNT(*) FROM comments WHERE post_id = p.id) AS comments_count,
+             EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) AS is_liked,
+             EXISTS(SELECT 1 FROM bookmarks WHERE post_id = p.id AND user_id = $1) AS is_bookmarked
+      FROM posts p
+      JOIN users u ON p.user_id = u.id
+      WHERE p.content ILIKE $2
+      ORDER BY p.created_at DESC
+      LIMIT $3 OFFSET $4
+    `;
+        const { rows } = await pool.query(query, [currentUserId, `%${searchQuery}%`, limit, offset]);
+        return rows;
     }
 };
 

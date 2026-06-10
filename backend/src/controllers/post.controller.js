@@ -1,16 +1,18 @@
+import sanitizeHtml from "sanitize-html";
 import pool from "../config/db.js";
 import PostModel from "../models/post.model.js";
 
 // CREATE POST
 export const createPost = async (req, res, next) => {
     try {
-        const { content, imageUrl } = req.body;
+        let { content, imageUrl } = req.body;
         const userId = req.user.id;
 
         if (!content) {
             return res.status(400).json({ message: "Content is required" });
         }
 
+        content = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} });
         const post = await PostModel.create({ userId, content, imageUrl });
 
         const io = req.app.get("io");
@@ -50,7 +52,9 @@ export const updatePost = async (req, res, next) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
-        const { content, imageUrl } = req.body;
+        let { content, imageUrl } = req.body;
+
+        if (content) content = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} });
 
         const post = await PostModel.updateById(id, userId, { content, imageUrl });
 
@@ -59,6 +63,25 @@ export const updatePost = async (req, res, next) => {
         }
 
         res.json(post);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// SEARCH POSTS
+export const searchPosts = async (req, res, next) => {
+    try {
+        const userId = req.user?.id || null;
+        const q = req.query.q;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        if (!q || q.length < 2) {
+            return res.json([]);
+        }
+
+        const posts = await PostModel.search({ query: q, currentUserId: userId, page, limit });
+        res.json(posts);
     } catch (err) {
         next(err);
     }

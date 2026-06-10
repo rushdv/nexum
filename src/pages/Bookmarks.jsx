@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Bookmark } from "lucide-react";
+import toast from "react-hot-toast";
 import api from "../api";
 import PostCard from "../components/PostCard";
 
@@ -13,6 +14,7 @@ const Bookmarks = () => {
                 const res = await api.get("/bookmarks");
                 const transformed = res.data.map(post => ({
                     id: post.id,
+                    user_id: post.user_id,
                     content: post.content,
                     time: new Date(post.created_at).toLocaleDateString(),
                     author: {
@@ -28,8 +30,8 @@ const Bookmarks = () => {
                     is_bookmarked: true
                 }));
                 setBookmarks(transformed);
-            } catch (err) {
-                console.error("Error fetching bookmarks:", err);
+            } catch {
+                toast.error("Failed to load bookmarks");
             } finally {
                 setLoading(false);
             }

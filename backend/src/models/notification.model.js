@@ -12,7 +12,8 @@ const NotificationModel = {
     await pool.query(query, [userId, actorId, postId, type]);
   },
 
-  async findByUser(userId) {
+  async findByUser(userId, page = 1, limit = 20) {
+    const offset = (page - 1) * limit;
     const query = `
       SELECT 
         n.id,
@@ -24,8 +25,9 @@ const NotificationModel = {
       JOIN users u ON n.actor_id = u.id
       WHERE n.user_id = $1
       ORDER BY n.created_at DESC
+      LIMIT $2 OFFSET $3
     `;
-    const { rows } = await pool.query(query, [userId]);
+    const { rows } = await pool.query(query, [userId, limit, offset]);
     return rows;
   },
 

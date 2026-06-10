@@ -7,7 +7,9 @@ const router = Router();
 // get my notifications
 router.get("/", authMiddleware, async (req, res, next) => {
   try {
-    const notifications = await NotificationModel.findByUser(req.user.id);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const notifications = await NotificationModel.findByUser(req.user.id, page, limit);
     res.json(notifications);
   } catch (err) {
     next(err);
