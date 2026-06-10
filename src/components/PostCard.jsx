@@ -1,5 +1,5 @@
 import { MessageCircle, Heart, Share2, MoreHorizontal, Bookmark, PenTool, Edit3, Trash2, X, Check, BookmarkCheck } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../api';
@@ -20,6 +20,30 @@ const PostCard = ({ post, onDelete }) => {
     const [showMenu, setShowMenu] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(content);
+    const [following, setFollowing] = useState(null);
+    const [followLoading, setFollowLoading] = useState(false);
+
+    const isOwnPost = Number(user_id) === Number(currentUser?.id);
+
+    useEffect(() => {
+        if (!isOwnPost && user_id) {
+            api.get(`/follow/${user_id}/status`).then(res => {
+                setFollowing(res.data.following);
+            }).catch(() => {});
+        }
+    }, [user_id]);
+
+    const handleFollow = async () => {
+        setFollowLoading(true);
+        try {
+            const res = await api.post(`/follow/${user_id}`);
+            setFollowing(res.data.following);
+        } catch {
+            toast.error("Failed to toggle follow");
+        } finally {
+            setFollowLoading(false);
+        }
+    };
 
     const handleLike = async () => {
         setError("");
@@ -120,10 +144,27 @@ const PostCard = ({ post, onDelete }) => {
 
             <div className="flex justify-between items-start mb-6 relative z-10">
                 <div className="flex items-center gap-4">
-                    <img src={author.avatar} alt={author.name} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-transparent group-hover:ring-cyan-500/20 transition-all" />
-                    <div>
-                        <h3 className="text-slate-200 font-bold text-[15px] leading-tight group-hover:text-cyan-400 transition-colors cursor-pointer">{author.name}</h3>
-                        <p className="text-slate-500 text-sm">{time}</p>
+                    <Link to={isOwnPost ? "/profile" : `/profile/${user_id}`}>
+                        <img src={author.avatar} alt={author.name} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-transparent group-hover:ring-cyan-500/20 transition-all" />
+                    </Link>
+                    <div className="flex items-center gap-3">
+                        <div>
+                            <Link to={isOwnPost ? "/profile" : `/profile/${user_id}`} className="text-slate-200 font-bold text-[15px] leading-tight hover:text-cyan-400 transition-colors">{author.name}</Link>
+                            <p className="text-slate-500 text-sm">{time}</p>
+                        </div>
+                        {!isOwnPost && following !== null && (
+                            <button
+                                onClick={handleFollow}
+                                disabled={followLoading}
+                                className={`text-xs font-semibold px-3 py-1 rounded-full transition-all ${
+                                    following
+                                        ? 'bg-slate-700/50 text-slate-400 hover:bg-red-500/10 hover:text-red-400'
+                                        : 'bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600/30'
+                                }`}
+                            >
+                                {followLoading ? '...' : following ? 'Following' : 'Follow'}
+                            </button>
+                        )}
                     </div>
                 </div>
                 <div className="relative">
