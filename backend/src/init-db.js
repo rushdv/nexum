@@ -173,6 +173,25 @@ const createBookmarksTable = async () => {
   }
 };
 
+const createRefreshTokensTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token TEXT UNIQUE NOT NULL,
+      expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  try {
+    await pool.query(query);
+    console.log('Refresh tokens table ensured');
+  } catch (err) {
+    console.error('Error creating refresh tokens table:', err);
+    process.exit(1);
+  }
+};
+
 const createNotificationsTable = async () => {
   const query = `
     CREATE TABLE IF NOT EXISTS notifications (
@@ -206,6 +225,7 @@ const initDb = async () => {
     await createConversationParticipantsTable();
     await createMessagesTable();
     await createBookmarksTable();
+    await createRefreshTokensTable();
     await createNotificationsTable();
     console.log('All tables initialized successfully');
     process.exit(0);
