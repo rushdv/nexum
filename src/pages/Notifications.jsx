@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
+import toast from "react-hot-toast";
 import api from "../api";
 
 const NotificationIcon = ({ type }) => {
@@ -20,8 +21,8 @@ const Notifications = () => {
             try {
                 const res = await api.get("/notifications");
                 setNotifications(res.data);
-            } catch (err) {
-                console.error("Error fetching notifications:", err);
+            } catch {
+                toast.error("Failed to load notifications");
             } finally {
                 setLoading(false);
             }
@@ -33,8 +34,8 @@ const Notifications = () => {
         try {
             await api.patch("/notifications/read");
             setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-        } catch (err) {
-            console.error("Error marking notifications read:", err);
+        } catch {
+            toast.error("Failed to mark as read");
         }
     };
 
