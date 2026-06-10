@@ -2,8 +2,11 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import passport from "../config/passport.js";
 import UserModel from "../models/user.model.js";
+import RefreshTokenModel from "../models/refresh-token.model.js";
 
 const SALT_ROUNDS = 10;
+const ACCESS_TOKEN_EXPIRY = "15m";
+const REFRESH_TOKEN_EXPIRY = "7d";
 
 // REGISTER
 export const register = async (req, res, next) => {
@@ -67,15 +70,19 @@ export const login = async (req, res, next) => {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        const token = jwt.sign(
+        const accessToken = jwt.sign(
             { id: user.id, email: user.email },
             process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+            { expiresIn: ACCESS_TOKEN_EXPIRY }
         );
+
+        await RefreshTokenModel.deleteByUser(user.id);
+        const refreshToken = await RefreshTokenModel.create(user.id);
 
         res.json({
             message: "Login successful",
-            token,
+            token: accessToken,
+            refreshToken: refreshToken.token,
             user: { id: user.id, username: user.username, email: user.email }
         });
     } catch (err) {
@@ -96,22 +103,68 @@ export const getMe = async (req, res, next) => {
     }
 };
 
+// REFRESH TOKEN
+export const refreshToken = async (req, res, next) => {
+    try {
+        const { refreshToken: token } = req.body;
+        if (!token) return res.status(400).json({ message: "Refresh token required" });
+
+        const stored = await RefreshTokenModel.findByToken(token);
+        if (!stored) return res.status(401).json({ message: "Invalid or expired refresh token" });
+
+        await RefreshTokenModel.deleteByToken(token);
+
+        const user = await UserModel.findById(stored.user_id);
+        if (!user) return res.status(401).json({ message: "User not found" });
+
+        const accessToken = jwt.sign(
+            { id: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: ACCESS_TOKEN_EXPIRY }
+        );
+
+        const newRefreshToken = await RefreshTokenModel.create(user.id);
+
+        res.json({
+            token: accessToken,
+            refreshToken: newRefreshToken.token,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// LOGOUT
+export const logout = async (req, res, next) => {
+    try {
+        const { refreshToken: token } = req.body;
+        if (token) await RefreshTokenModel.deleteByToken(token);
+        res.json({ message: "Logged out" });
+    } catch (err) {
+        next(err);
+    }
+};
+
 // GOOGLE AUTH
 export const googleAuth = passport.authenticate("google", {
     scope: ["profile", "email"],
     session: false,
 });
 
-export const googleCallback = (req, res, next) => {
-    passport.authenticate("google", { session: false }, (err, user) => {
+export const googleCallback = async (req, res, next) => {
+    passport.authenticate("google", { session: false }, async (err, user) => {
         if (err || !user) {
             return res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/login?error=google_auth_failed`);
         }
-        const token = jwt.sign(
+        const accessToken = jwt.sign(
             { id: user.id, email: user.email },
             process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+            { expiresIn: ACCESS_TOKEN_EXPIRY }
         );
-        res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/login?token=${token}`);
+
+        await RefreshTokenModel.deleteByUser(user.id);
+        const refreshToken = await RefreshTokenModel.create(user.id);
+
+        res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/login?token=${accessToken}&refreshToken=${refreshToken.token}`);
     })(req, res, next);
 };
