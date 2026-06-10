@@ -14,7 +14,9 @@ export const toggleBookmark = async (req, res, next) => {
 export const getBookmarks = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const bookmarks = await BookmarkModel.findByUser(userId);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const bookmarks = await BookmarkModel.findByUser(userId, page, limit);
     res.json(bookmarks);
   } catch (err) {
     next(err);
