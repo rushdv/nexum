@@ -18,14 +18,9 @@ const Explore = () => {
             setLoading(true);
             try {
                 if (tab === "posts") {
-                    const res = await api.get("/posts");
-                    let filtered = res.data;
-                    if (query) {
-                        filtered = res.data.filter(p =>
-                            p.content.toLowerCase().includes(query.toLowerCase())
-                        );
-                    }
-                    const transformed = filtered.map(post => ({
+                    const endpoint = query ? `/posts/search?q=${encodeURIComponent(query)}` : "/posts";
+                    const res = await api.get(endpoint);
+                    const transformed = res.data.map(post => ({
                         id: post.id,
                         user_id: post.user_id,
                         content: post.content,
