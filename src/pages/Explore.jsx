@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { Compass, Users } from "lucide-react";
+import toast from "react-hot-toast";
 import api from "../api";
 import PostCard from "../components/PostCard";
 
@@ -26,6 +27,7 @@ const Explore = () => {
                     }
                     const transformed = filtered.map(post => ({
                         id: post.id,
+                        user_id: post.user_id,
                         content: post.content,
                         time: new Date(post.created_at).toLocaleDateString(),
                         author: {
@@ -45,8 +47,8 @@ const Explore = () => {
                     const res = await api.get(`/users/search?q=${query}`);
                     setUsers(res.data);
                 }
-            } catch (err) {
-                console.error("Error:", err);
+            } catch {
+                toast.error("Search failed");
             } finally {
                 setLoading(false);
             }
@@ -95,7 +97,7 @@ const Explore = () => {
                 users.length > 0 ? (
                     <div className="space-y-2">
                         {users.map(u => (
-                            <div key={u.id} className="flex items-center gap-4 p-4 bg-[#1e293b]/50 rounded-2xl border border-slate-700/50">
+                            <Link key={u.id} to={`/profile/${u.id}`} className="flex items-center gap-4 p-4 bg-[#1e293b]/50 rounded-2xl border border-slate-700/50 hover:bg-[#1e293b] transition-colors">
                                 <div className="w-10 h-10 rounded-full bg-slate-700 overflow-hidden">
                                     <img src={`https://ui-avatars.com/api/?name=${u.username}&background=random&color=fff`} alt={u.username} className="w-full h-full object-cover" />
                                 </div>
@@ -103,7 +105,7 @@ const Explore = () => {
                                     <p className="text-sm font-bold text-slate-200">{u.username}</p>
                                     <p className="text-xs text-slate-500">@{u.username}</p>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 ) : (
