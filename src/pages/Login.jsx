@@ -13,8 +13,10 @@ const Login = () => {
 
     useEffect(() => {
         const token = searchParams.get("token");
+        const refreshToken = searchParams.get("refreshToken");
         if (token) {
             localStorage.setItem("token", token);
+            if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
             window.location.href = "/";
         }
     }, [searchParams, navigate]);
