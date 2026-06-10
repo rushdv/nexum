@@ -17,6 +17,16 @@ const UserModel = {
         const { rows } = await pool.query(query, [email]);
         return rows[0];
     },
+
+    async findById(userId) {
+        const query = `
+      SELECT id, username, email, created_at
+      FROM users
+      WHERE id = $1
+    `;
+        const { rows } = await pool.query(query, [userId]);
+        return rows[0];
+    },
 };
 
 export default UserModel;
