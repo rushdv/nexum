@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Mail, Send, ArrowLeft, Search } from "lucide-react";
+import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import api from "../api";
@@ -22,8 +23,8 @@ const Messages = () => {
             try {
                 const res = await api.get("/messages");
                 setConversations(res.data);
-            } catch (err) {
-                console.error("Error fetching conversations:", err);
+            } catch {
+                toast.error("Failed to load conversations");
             } finally {
                 setLoading(false);
             }
@@ -51,8 +52,8 @@ const Messages = () => {
         try {
             const res = await api.get(`/messages/${convId}`);
             setMessages(res.data);
-        } catch (err) {
-            console.error("Error fetching messages:", err);
+        } catch {
+            toast.error("Failed to load messages");
         }
     };
 
@@ -63,8 +64,8 @@ const Messages = () => {
             const res = await api.post(`/messages/${activeConv}`, { content });
             setMessages(prev => [...prev, res.data]);
             setContent("");
-        } catch (err) {
-            console.error("Error sending message:", err);
+        } catch {
+            toast.error("Failed to send message");
         }
     };
 
@@ -87,8 +88,8 @@ const Messages = () => {
             setMessages(res.data.messages);
             const convsRes = await api.get("/messages");
             setConversations(convsRes.data);
-        } catch (err) {
-            console.error("Error starting conversation:", err);
+        } catch {
+            toast.error("Failed to start conversation");
         }
     };
 
