@@ -1,10 +1,14 @@
 import { MessageCircle, Heart, Share2, MoreHorizontal, Bookmark, PenTool, Edit3, Trash2, X, Check, BookmarkCheck } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api from '../api';
+import { useAuth } from '../context/AuthContext';
+import { sanitize } from '../utils/sanitize';
 
 const PostCard = ({ post, onDelete }) => {
-    const { id, author, time, content, image, stats, is_liked, is_bookmarked } = post;
+    const { user: currentUser } = useAuth();
+    const { id, author, time, content, image, stats, is_liked, is_bookmarked, user_id } = post;
     const [liked, setLiked] = useState(is_liked);
     const [likesCount, setLikesCount] = useState(stats.likes);
     const [bookmarked, setBookmarked] = useState(is_bookmarked);
@@ -24,7 +28,7 @@ const PostCard = ({ post, onDelete }) => {
             setLiked(res.data.liked);
             setLikesCount(prev => res.data.liked ? prev + 1 : prev - 1);
         } catch (err) {
-            console.error("Error liking post:", err);
+            toast.error(err.response?.status === 401 ? "Please login to like posts" : "Failed to like post");
             setError(err.response?.status === 401 ? "Please login to like posts" : "Failed to like post");
         }
     };
@@ -33,8 +37,8 @@ const PostCard = ({ post, onDelete }) => {
         try {
             const res = await api.get(`/comments/${id}`);
             setComments(res.data);
-        } catch (err) {
-            console.error("Error fetching comments:", err);
+        } catch {
+            toast.error("Failed to load comments");
         }
     };
 
@@ -53,7 +57,7 @@ const PostCard = ({ post, onDelete }) => {
             setComments(prev => [...prev, res.data]);
             setCommentContent("");
         } catch (err) {
-            console.error("Error posting comment:", err);
+            toast.error(err.response?.status === 401 ? "Please login to comment" : "Failed to post comment");
             setError(err.response?.status === 401 ? "Please login to comment" : "Failed to post comment");
         } finally {
             setIsCommenting(false);
@@ -67,8 +71,8 @@ const PostCard = ({ post, onDelete }) => {
             await api.put(`/posts/${id}`, { content: editContent });
             setIsEditing(false);
             post.content = editContent;
-        } catch (err) {
-            console.error("Error editing post:", err);
+        } catch {
+            toast.error("Failed to update post");
             setError("Failed to update post");
         }
     };
@@ -80,8 +84,7 @@ const PostCard = ({ post, onDelete }) => {
         } else {
             try {
                 await navigator.clipboard.writeText(url);
-                setError("Link copied to clipboard!");
-                setTimeout(() => setError(""), 2000);
+                toast.success("Link copied to clipboard!");
             } catch (_) {}
         }
     };
@@ -91,8 +94,8 @@ const PostCard = ({ post, onDelete }) => {
         try {
             const res = await api.post(`/bookmarks/${id}`);
             setBookmarked(res.data.bookmarked);
-        } catch (err) {
-            console.error("Error toggling bookmark:", err);
+        } catch {
+            toast.error("Failed to toggle bookmark");
         }
     };
 
@@ -101,8 +104,8 @@ const PostCard = ({ post, onDelete }) => {
         try {
             await api.delete(`/posts/${id}`);
             if (onDelete) onDelete(id);
-        } catch (err) {
-            console.error("Error deleting post:", err);
+        } catch {
+            toast.error("Failed to delete post");
             setError("Failed to delete post");
         }
     };
@@ -127,7 +130,7 @@ const PostCard = ({ post, onDelete }) => {
                     <button onClick={() => setShowMenu(!showMenu)} className="text-slate-600 hover:text-slate-300 transition-colors">
                         <MoreHorizontal className="w-5 h-5" />
                     </button>
-                    {showMenu && (
+                    {showMenu && Number(user_id) === Number(currentUser?.id) && (
                         <div className="absolute right-0 top-8 bg-slate-800 rounded-xl border border-slate-700 shadow-xl p-1 min-w-[140px] z-50">
                             <button
                                 onClick={() => { setIsEditing(true); setShowMenu(false); }}
@@ -166,7 +169,7 @@ const PostCard = ({ post, onDelete }) => {
                     </div>
                 ) : (
                     <p className="text-slate-300 text-[16px] leading-[1.7] mb-6 font-medium whitespace-pre-wrap">
-                        {content.split(/(#\w+|@\w+)/g).map((part, i) => {
+                        {sanitize(content).split(/(#\w+|@\w+)/g).map((part, i) => {
                             if (part.startsWith('#')) {
                                 return <Link key={i} to={`/explore?q=${encodeURIComponent(part.slice(1))}`} className="text-cyan-400 hover:underline">{part}</Link>;
                             }
@@ -233,7 +236,7 @@ const PostCard = ({ post, onDelete }) => {
                                         <span className="text-xs font-bold text-slate-200">{c.username}</span>
                                         <span className="text-[10px] text-slate-500">{new Date(c.created_at).toLocaleDateString()}</span>
                                     </div>
-                                    <p className="text-sm text-slate-400">{c.content}</p>
+                                    <p className="text-sm text-slate-400">{sanitize(c.content)}</p>
                                 </div>
                             </div>
                         )) : (
