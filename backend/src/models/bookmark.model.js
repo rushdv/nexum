@@ -19,7 +19,8 @@ const BookmarkModel = {
     return rows.length > 0;
   },
 
-  async findByUser(userId) {
+  async findByUser(userId, page = 1, limit = 10) {
+    const offset = (page - 1) * limit;
     const query = `
       SELECT p.id, p.content, p.image_url, p.created_at,
              u.id AS user_id, u.username,
@@ -31,8 +32,9 @@ const BookmarkModel = {
       JOIN users u ON p.user_id = u.id
       WHERE b.user_id = $1
       ORDER BY b.created_at DESC
+      LIMIT $2 OFFSET $3
     `;
-    const { rows } = await pool.query(query, [userId]);
+    const { rows } = await pool.query(query, [userId, limit, offset]);
     return rows;
   }
 };
