@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import api from "../api";
 import PostCard from "../components/PostCard";
@@ -38,6 +39,7 @@ const Profile = () => {
                 );
                 const transformed = userPosts.map(post => ({
                     id: post.id,
+                    user_id: post.user_id,
                     content: post.content,
                     time: new Date(post.created_at).toLocaleDateString(),
                     author: {
@@ -52,8 +54,8 @@ const Profile = () => {
                     is_liked: post.is_liked
                 }));
                 setPosts(transformed);
-            } catch (err) {
-                console.error("Error fetching profile:", err);
+            } catch {
+                toast.error("Failed to load profile");
             } finally {
                 setLoading(false);
             }
@@ -66,8 +68,8 @@ const Profile = () => {
             const res = await api.post(`/follow/${id}`);
             setFollowing(res.data.following);
             setFollowersCount(res.data.followersCount);
-        } catch (err) {
-            console.error("Error toggling follow:", err);
+        } catch {
+            toast.error("Failed to toggle follow");
         }
     };
 
