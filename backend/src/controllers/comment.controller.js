@@ -1,3 +1,4 @@
+import sanitizeHtml from "sanitize-html";
 import CommentModel from "../models/comment.model.js";
 import PostModel from "../models/post.model.js";
 import NotificationModel from "../models/notification.model.js";
@@ -5,11 +6,12 @@ import NotificationModel from "../models/notification.model.js";
 export const createComment = async (req, res, next) => {
   try {
     const { id: postId } = req.params;
-    const { content } = req.body;
+    let { content } = req.body;
     const userId = req.user.id;
 
     if (!content) return res.status(400).json({ message: "Content is required" });
 
+    content = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} });
     const comment = await CommentModel.create({ userId, postId, content });
 
     const post = await PostModel.findById(postId);
