@@ -5,7 +5,7 @@
 It is **inspired by** existing social platforms, but **not a clone** of Facebook, Twitter, or Instagram.  
 Nexum focuses on **clean UI, intentional UX, and scalable architecture**.
 
----
+--- 
  
 ## ✨ Vision
 
